@@ -1,25 +1,41 @@
-import React from 'react';
-import logo from './logo.svg';
-import './App.css';
+import {
+  Remirror,
+  ThemeProvider,
+  useRemirror,
+} from '@remirror/react';
+import { AnnotationExtension, YjsExtension } from 'remirror/extensions';
+import * as Y from 'yjs'
+import { WebsocketProvider } from 'y-websocket'
+
+import 'remirror/styles/all.css';
+
+const doc = new Y.Doc()
+const wsProvider = new WebsocketProvider('ws://localhost:1234', 'my-roomname', doc)
+
+wsProvider.on('status', (event: any) => {
+  console.log(event.status) // logs "connected" or "disconnected"
+});
+
+const extensions = () => [
+  new AnnotationExtension(),
+  new YjsExtension({ getProvider: () => wsProvider }),
+];
 
 function App() {
+  const { manager, state, onChange } = useRemirror({
+    extensions: extensions,
+  });
+
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.tsx</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
+    <ThemeProvider>
+      <Remirror
+        manager={manager}
+        autoFocus
+        onChange={onChange}
+        initialContent={state}
+        autoRender='end'
+      />
+    </ThemeProvider>
   );
 }
 
